@@ -29,12 +29,12 @@ jobs:
         run: skystream validate
 
       - name: Deploy Repository
-        run: skystream deploy --url "https://raw.githubusercontent.com/${{ github.repository }}/main/repo.json"
+        run: skystream deploy --url "https://raw.githubusercontent.com/${{ github.repository }}/main"
 
-      - name: Commit repo.json
+      - name: Commit deploy artifacts
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add repo.json
-          git diff --cached --quiet || git commit -m "ci: auto-deploy repo.json [skip ci]"
+          git add repo.json dist/plugins.json dist/*.sky README.md
+          git diff --cached --quiet || git commit -m "ci: atualiza artefatos de deploy [skip ci]"
           git push

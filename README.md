@@ -25,7 +25,7 @@ Plugin para o app [SkyStream](https://github.com/akashdh11/skystream) que raspa 
 2. Abra o SkyStream → **Extensions** → **Add Source**
 3. Cole a URL:
 ```
-https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/repo.json
+https://raw.githubusercontent.com/pacdt/anmfire-plugin/main/repo.json
 ```
 
 ---
@@ -40,6 +40,8 @@ https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/repo.json
 ### Estrutura do Projeto
 ```
 animefire-skystream/
+├── repo.json          ← Índice do repositório SkyStream
+├── dist/              ← Artefatos gerados pelo `skystream deploy`
 ├── animefire/
 │   ├── plugin.js       ← Lógica completa do scraper
 │   └── plugin.json     ← Manifesto do plugin (exigido pelo CLI)
@@ -60,32 +62,34 @@ skystream init "anime-br" --package-name com.animebr.animefire --plugin-name "An
 # Copiar plugin.js e plugin.json para a pasta gerada, depois:
 
 # Home
-skystream test -f getHome
+skystream test --path animefire -f getHome
 
 # Busca
-skystream test -f search -q "Naruto"
+skystream test --path animefire -f search -q "Naruto"
 
 # Detalhes + episódios
-skystream test -f load -q "https://animefire.io/animes/naruto-todos-os-episodios"
+skystream test --path animefire -f load -q "https://animefire.io/animes/naruto-todos-os-episodios"
 
 # Stream com mp4 direto
-skystream test -f loadStreams -q "https://animefire.io/animes/naruto/1"
+skystream test --path animefire -f loadStreams -q "https://animefire.io/animes/naruto/1"
 
 # Stream com link Blogger
-skystream test -f loadStreams -q "https://animefire.io/animes/one-piece/1"
+skystream test --path animefire -f loadStreams -q "https://animefire.io/animes/one-piece/1"
 ```
 
 ### Deploy
 
 ```bash
-git init
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPO.git
-git add .
-git commit -m "feat: AnimeFire plugin inicial"
-git push -u origin main
+skystream deploy --url https://raw.githubusercontent.com/pacdt/anmfire-plugin/main
 ```
 
-O GitHub Actions fará o deploy automaticamente a cada push na branch `main`.
+Isso gera ou atualiza:
+
+- `repo.json`
+- `dist/plugins.json`
+- `dist/com.animebr.animefire.sky`
+
+O GitHub Actions também pode executar o deploy automaticamente a cada push na branch `main`.
 
 ---
 
@@ -200,8 +204,8 @@ Logs no app: **Settings → Logs** — filtre por `[AnimeFire]`.
 | Runtime | QuickJS — sem DOM, sem `window`, sem `localStorage` |
 | API HTTP | `http_get(url, headers)` nativo do runtime; `fetch()` como fallback (Node 18+) |
 | Shim | `httpRaw()` tenta `http_get` primeiro, cai para `fetch` automaticamente |
-| Manifesto | `plugin.json` (CLI exige esse nome, não `manifest.json`) |
-| `manifest.baseUrl` | Lido do `plugin.json`; pode ser sobrescrito pelo usuário no app |
+| Manifesto | `animefire/plugin.json` (CLI exige esse nome, não `manifest.json`) |
+| `manifest.baseUrl` | Lido do `animefire/plugin.json`; pode ser sobrescrito pelo usuário no app |
 | Dependências | Nenhuma — plugin é um único `.js` self-contained |
 | Configurações | Acessíveis via `settings.{id}` após `registerSettings()` |
 | Domínios | `animefire.io` (principal), `animefire.plus` (redirect), `blogger.com` (vídeos) |

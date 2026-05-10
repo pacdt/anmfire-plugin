@@ -1,0 +1,9 @@
+{
+  "name": "AnimeFire SkyStream Repository",
+  "packageName": "com.animebr",
+  "description": "Repositorio SkyStream com o plugin AnimeFire não oficial.",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/pacdt/anmfire-plugin/main/dist/plugins.json"
+  ]
+}

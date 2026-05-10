@@ -1,0 +1,19 @@
+[
+  {
+    "packageName": "com.animebr.animefire",
+    "name": "AnimeFire (Unofficial)",
+    "version": 1,
+    "baseUrl": "https://animefire.io",
+    "description": "Animes dublados e legendados via AnimeFire. Home e busca via CDN, streams em tempo real. Plugin nao oficial.",
+    "authors": [
+      "PacDT"
+    ],
+    "languages": [
+      "pt-BR"
+    ],
+    "categories": [
+      "anime"
+    ],
+    "url": "https://raw.githubusercontent.com/pacdt/anmfire-plugin/main/dist/com.animebr.animefire.sky"
+  }
+]
