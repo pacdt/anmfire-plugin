@@ -647,6 +647,23 @@
     return list.filter(function(i) { return i.type === want; });
   }
 
+  /**
+   * Converte um item de episódio do CDN (latest_episodes.json)
+   * para um MultimediaItem do SkyStream.
+   *
+   * @param {Object} item
+   * @returns {MultimediaItem}
+   */
+  function cdnEpisodeToMedia(item) {
+    return new MultimediaItem({
+      title:     (item.anime_title || item.anime_slug) + " - Ep " + item.episode_number,
+      url:       BASE + "/animes/" + item.anime_slug + "-todos-os-episodios",
+      posterUrl: item.anime_image || "",
+      type:      "anime",
+      dubStatus: item.type === "dublado" ? "dubbed" : "subbed",
+    });
+  }
+
   // ══════════════════════════════════════════════════════════════
   //  FUNÇÕES PRINCIPAIS (Contrato SkyStream)
   // ══════════════════════════════════════════════════════════════
@@ -654,27 +671,32 @@
   /**
    * getHome – Retorna categorias para a tela inicial via CDN.
    *
-   * Categorias:
-   *   "Trending"   → new_animes.json  (últimos atualizados → Hero Carousel)
-   *   "Dublados"   → all.json filtrado por type==="dublado"  (primeiros 40)
-   *   "Legendados" → all.json filtrado por type==="legendado" (primeiros 40)
-   *
-   * Três requests paralelos para não bloquear a UI.
-   *
    * @param {Function} cb
    */
   async function getHome(cb) {
     try {
       var ct = (typeof settings !== "undefined" && settings.content_type) || "Todos";
 
-      // Três chamadas em paralelo
-      var newReq = httpGetJson(CDN + "/animes/new_animes.json");
-      var allReq = (ct === "Todos" || ct === "Dublado" || ct === "Legendado")
-        ? httpGetJson(CDN + "/animes/all.json")
-        : Promise.resolve(null);
+      // Chamadas em paralelo para todos os endpoints principais e gêneros populares
+      var newReq     = httpGetJson(CDN + "/animes/new_animes.json");
+      var latestReq  = httpGetJson(CDN + "/animes/latest_episodes.json");
+      var allReq     = httpGetJson(CDN + "/animes/all.json");
+      
+      var actionReq    = httpGetJson(CDN + "/genres/action.json");
+      var adventureReq = httpGetJson(CDN + "/genres/adventure.json");
+      var comedyReq    = httpGetJson(CDN + "/genres/comedy.json");
+      var fantasyReq   = httpGetJson(CDN + "/genres/fantasy.json");
+      var romanceReq   = httpGetJson(CDN + "/genres/romance.json");
 
-      var newData = await newReq;
-      var allData = await allReq;
+      var newData    = await newReq;
+      var latestData = await latestReq;
+      var allData    = await allReq;
+      
+      var actionData   = await actionReq;
+      var adventureData = await adventureReq;
+      var comedyData   = await comedyReq;
+      var fantasyData  = await fantasyReq;
+      var romanceData  = await romanceReq;
 
       var result = {};
 
@@ -682,6 +704,32 @@
       if (Array.isArray(newData) && newData.length > 0) {
         var trending = filterByType(newData).map(cdnItemToMedia);
         if (trending.length > 0) result["Trending"] = trending;
+      }
+
+      // ── Recentes (Últimos Episódios) ──────────────────────────
+      if (Array.isArray(latestData) && latestData.length > 0) {
+        var recent = filterByType(latestData.map(function(i) {
+          return Object.assign({}, i, { type: i.type || "legendado" });
+        })).map(cdnEpisodeToMedia);
+        if (recent.length > 0) result["Recentes"] = recent;
+      }
+
+      // ── Gêneros Populares ────────────────────────────────────
+      var genres = [
+        { name: "Ação", data: actionData },
+        { name: "Aventura", data: adventureData },
+        { name: "Comédia", data: comedyData },
+        { name: "Fantasia", data: fantasyData },
+        { name: "Romance", data: romanceData }
+      ];
+
+      for (var g = 0; g < genres.length; g++) {
+        var gd = genres[g].data;
+        // Os JSONs de gênero no CDN têm o formato { name, slug, count, animes: [] }
+        if (gd && Array.isArray(gd.animes)) {
+          var items = filterByType(gd.animes).slice(0, 30).map(cdnItemToMedia);
+          if (items.length > 0) result[genres[g].name] = items;
+        }
       }
 
       // ── Dublados / Legendados ────────────────────────────────
@@ -704,12 +752,14 @@
 
       console.log(
         "[AnimeFire] getHome: Trending=" + (result["Trending"] || []).length +
+        " Recentes=" + (result["Recentes"] || []).length +
+        " Ação=" + (result["Ação"] || []).length +
         " Dublados=" + (result["Dublados"] || []).length +
         " Legendados=" + (result["Legendados"] || []).length
       );
 
       if (Object.keys(result).length === 0) {
-        cb({ success: false, error: "CDN sem dados. Tente novamente em instantes." });
+        cb({ success: false, error: "CDN sem dados. Tente novamente." });
         return;
       }
 
