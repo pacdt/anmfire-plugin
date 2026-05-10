@@ -21,7 +21,7 @@
 
   // manifest.baseUrl é definido pelo plugin.json e pode ser sobrescrito
   // pelo usuário no app (mirrors, proxies). animefire.plus redireciona para .io.
-  const BASE      = manifest.baseUrl; // "https://animefire.io"
+  const BASE      = (typeof manifest !== 'undefined' ? manifest.baseUrl : "https://animefire.io");
   const VIDEO_API = BASE + "/video";
   
   // API estática via CDN (jsDelivr) — catálogo, busca e metadados
@@ -108,22 +108,24 @@
   //  CONFIGURAÇÕES DO USUÁRIO (visíveis em Settings > Plugins)
   // ══════════════════════════════════════════════════════════════
 
-  registerSettings([
-    {
-      id: "content_type",
-      name: "Tipo de Conteúdo",
-      type: "select",
-      options: ["Todos", "Dublado", "Legendado"],
-      default: "Todos",
-    },
-    {
-      id: "preferred_quality",
-      name: "Qualidade Preferida",
-      type: "select",
-      options: ["1080p", "720p", "480p", "360p"],
-      default: "720p",
-    },
-  ]);
+  if (typeof registerSettings === "function") {
+    registerSettings([
+      {
+        id: "content_type",
+        name: "Tipo de Conteúdo",
+        type: "select",
+        options: ["Todos", "Dublado", "Legendado"],
+        default: "Todos",
+      },
+      {
+        id: "preferred_quality",
+        name: "Qualidade Preferida",
+        type: "select",
+        options: ["1080p", "720p", "480p", "360p"],
+        default: "720p",
+      },
+    ]);
+  }
 
   // ══════════════════════════════════════════════════════════════
   //  UTILITÁRIOS HTTP
@@ -948,9 +950,10 @@
   //  EXPORTAÇÕES (obrigatório para o runtime SkyStream)
   // ══════════════════════════════════════════════════════════════
 
-  globalThis.getHome      = getHome;
-  globalThis.search       = search;
-  globalThis.load         = load;
-  globalThis.loadStreams   = loadStreams;
+globalThis.getHome = getHome;
+globalThis.search = search;
+globalThis.load = load;
+globalThis.loadStreams = loadStreams;
 
 })();
+
