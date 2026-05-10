@@ -108,8 +108,8 @@
   //  CONFIGURAÇÕES DO USUÁRIO (visíveis em Settings > Plugins)
   // ══════════════════════════════════════════════════════════════
 
-  if (typeof registerSettings === "function") {
-    registerSettings([
+  if (typeof globalThis.registerSettings === "function") {
+    globalThis.registerSettings([
       {
         id: "content_type",
         name: "Tipo de Conteúdo",
