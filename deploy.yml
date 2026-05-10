@@ -1,0 +1,40 @@
+name: Deploy SkyStream Repository
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install SkyStream CLI
+        run: npm install -g skystream-cli
+
+      - name: Validate Plugin
+        run: skystream validate
+
+      - name: Deploy Repository
+        run: skystream deploy --url "https://raw.githubusercontent.com/${{ github.repository }}/main/repo.json"
+
+      - name: Commit repo.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add repo.json
+          git diff --cached --quiet || git commit -m "ci: auto-deploy repo.json [skip ci]"
+          git push
